@@ -1,0 +1,1 @@
+<Event(1541-JoyDeviceAdded {'device_index': 0, 'guid': '030000004f0400000ab1000011010000'})>
