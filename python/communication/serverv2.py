@@ -3,6 +3,13 @@ from flask_cors import CORS
 from com_stm32v2 import setupSerial, recvLikeArduino, sendToArduino
 from joystick_control import pilotage
 import time
+import RPi.GPIO as GPIO
+
+#init GPIO
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(32, GPIO.OUT)
+pwm = GPIO.PWM(32, 1)
+
 
 #init stm_32
 stm = False
@@ -97,19 +104,44 @@ def connexion():
    else:
        return "GET"
 
+@app.route('/com/brasmaitre',methods = ['POST', 'GET'])
+def brasmaitre():
+   if request.method == 'POST':
+      try:
+         value = request.get_json()
+         print(value)
+         print("mode : ", value['mode'])
+         print("bars maitre : ",value['valeur'])
+         stmok = False
+         if stm:
+            try:
+               sendToArduino("this is a test")
+               arduinoReply = recvLikeArduino()
+               while (arduinoReply == 'XXX'):
+                  arduinoReply = recvLikeArduino()
+               print ("Reply %s" %(arduinoReply))
+               stmok = True
+            except Exception as e:
+               stmok = False
+            return jsonify({'status': "ok","statusSTM":stmok,'stm_value':str(arduinoReply),'confirmed_value':pilot})
+         return jsonify({'status': "ok","statusSTM":stmok,'confirmed_value':value})
+      except Exception as e:
+         return jsonify({"status": "error","confirmed_value":str(e)})
+
+
+
 @app.route('/com/joystick',methods = ['POST', 'GET'])
 def joystick():
    debut = time.time()
-   global mode
    global articulation_old
    global mode_pince
-   vmax = 20
+   vmax = .1
    if request.method == 'POST':
       try:
          value = request.get_json()
          print(value)
          try:
-            articulation_old, mode_pince, pilot = pilotage(articulation_old, mode_pince, mode, value, vmax)
+            articulation_old, mode_pince, pilot = pilotage(articulation_old, mode_pince, value, vmax)
             print(articulation_old)
             print(pilot)
          except:

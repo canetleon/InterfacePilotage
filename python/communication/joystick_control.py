@@ -2,8 +2,10 @@ from math import pi, cos, sin
 import numpy as np
 
 articulation_select = {'0':7,'1':'mode_pince','4':2,'5':3,'6':4,'7':5,'8':6}
+rapport_reduction = [100,75,69,58,19,5,1]
 
-def pilotage(articulation_old, mode_pince, mode, value, vmax):
+def pilotage(articulation_old, mode_pince, value, vmax):
+   mode = value['mode']
    if mode == 'articulation':
       vitesse = [0,0,0,0,0,0,0]
       if value['type'] == 'buttondown':
@@ -20,8 +22,8 @@ def pilotage(articulation_old, mode_pince, mode, value, vmax):
             vitesse[6] = 0
       elif value['type'] == 'joystick':
          button = articulation_old
-         rot_base = value['valeur']['Axis 2'] * vmax
-         rot_articulation = -value['valeur']['Axis 1'] * vmax
+         rot_base = value['valeur']['Axis 2'] * vmax * (value['valeur']['Axis 2'] + 1)/2
+         rot_articulation = -value['valeur']['Axis 1'] * vmax * (value['valeur']['Axis 2'] + 1)/2
          vitesse[0] = rot_base
          for i in range(1,6):
             if i == button-1:
@@ -31,17 +33,17 @@ def pilotage(articulation_old, mode_pince, mode, value, vmax):
       return button, mode_pince, {'mode':'run','vitesses': vitesse}
 
 
-   if mode == 'mci':
+   if mode == 'vitesse':
       vitesse = [0,0,0,0,0,0,0]
       if value['type'] == 'joystick':
-         vx = value['valeur']['Axis 0']*vmax
-         vy = value['valeur']['Axis 1']*vmax
-         vz = value['valeur']['Axis 2']*vmax
-         vitesse = calculMCI(vx,vy,vz,0,0,0)
+         vx = value['valeur']['Axis 0'] * vmax * (value['valeur']['Axis 2'] + 1)/2
+         vy = value['valeur']['Axis 1'] * vmax * (value['valeur']['Axis 2'] + 1)/2
+         vz = value['valeur']['Axis 2'] * vmax * (value['valeur']['Axis 2'] + 1)/2
+         vitesse = calculMCI(vx,vy,vz,0,0,0,rapport_reduction)
 
       return articulation_old, mode_pince, {'mode':'run','vitesses': vitesse}
 
-def calculMCI(vx,vy,vz,wx,wy,wz):
+def calculMCI(vx,vy,vz,wx,wy,wz,red):
    r1 = 0.1235
    d2 = 0.1745
    d3 = 0.145
@@ -100,4 +102,4 @@ def calculMCI(vx,vy,vz,wx,wy,wz):
 
    Jpseudoinv=np.dot((J0.T),np.linalg.inv((np.dot(J0,(J0.T)))))
    qp = np.dot(Jpseudoinv,np.array([vx,vy,vz,wx,wy,wz]))
-   return qp
+   return [qp[0]*red[0],qp[1]*red[1],qp[2]*red[2],qp[3]*red[3],qp[4]*red[4],qp[5]*red[5],qp[6]*red[6]]

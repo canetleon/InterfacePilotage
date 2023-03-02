@@ -95,6 +95,31 @@ def connexion():
    else:
        return "GET"
 
+
+@app.route('/com/brasmaitre',methods = ['POST', 'GET'])
+def brasmaitre():
+   if request.method == 'POST':
+      try:
+         value = request.get_json()
+         print(value)
+         print("mode : ", value['mode'])
+         print("bars maitre : ",value['valeur'])
+         stmok = False
+         if stm:
+            try:
+               sendToArduino("this is a test")
+               arduinoReply = recvLikeArduino()
+               while (arduinoReply == 'XXX'):
+                  arduinoReply = recvLikeArduino()
+               print ("Reply %s" %(arduinoReply))
+               stmok = True
+            except Exception as e:
+               stmok = False
+            return jsonify({'status': "ok","statusSTM":stmok,'stm_value':str(arduinoReply),'confirmed_value':pilot})
+         return jsonify({'status': "ok","statusSTM":stmok,'confirmed_value':value})
+      except Exception as e:
+         return jsonify({"status": "error","confirmed_value":str(e)})
+
 @app.route('/com/joystick',methods = ['POST', 'GET'])
 def joystick():
    debut = time.time()
