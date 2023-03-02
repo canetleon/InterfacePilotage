@@ -62,6 +62,13 @@ def commande():
          print(value)
          print("mode : ", value['mode'])
          print("commande numérique : ",value['commande_numerique'])
+         try:
+            if value['commande_numerique']['eclairage']:
+               pwm.start(100)
+            if not value['commande_numerique']['eclairage']:
+               pwm.stop()
+         except Exception as e:
+            pass
          stmok = False
          if stm:
             try:
