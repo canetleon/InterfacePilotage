@@ -19,6 +19,8 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app)
 
+## Routes
+
 @app.route('/com/stockage',methods = ['POST', 'GET'])
 def stockage():
    if request.method == 'POST':
@@ -137,6 +139,120 @@ def com():
    else:
        return jsonify({"method":"GET"})
 
+
+## Test Routes
+
+@app.route('/test/stockage',methods = ['POST', 'GET'])
+def stockagetest():
+   if request.method == 'POST':
+      try:
+         value = request.get_json()
+         print("nouveau stockage : ", value['nouveau_stockage'])
+         print("emplacements : ", value['emplacement'])
+         stmok= False
+         if stm:
+            try:
+               sendToArduino("this is a test")
+               arduinoReply = recvLikeArduino()
+               while (arduinoReply == 'XXX'):
+                  arduinoReply = recvLikeArduino()
+               print ("Reply %s" %(arduinoReply))
+               stmok = True
+            except Exception as e:
+               stmok = False
+            return jsonify({'status': "ok","statusSTM":stmok,'stm_value':str(arduinoReply),'confirmed_value':value})
+         return jsonify({'status': "ok","statusSTM":stmok,'confirmed_value':value})
+      except Exception as e:
+         return jsonify({"status": "error","confirmed_value":str(e)})
+   else:
+       return "GET"
+
+
+@app.route('/test/commande',methods = ['POST', 'GET'])
+def commandetest():
+   if request.method == 'POST':
+      try:
+         value = request.get_json()
+         print(value)
+         print("mode : ", value['mode'])
+         print("commande numérique : ",value['commande_numerique'])
+         stmok = False
+         if stm:
+            try:
+               sendToArduino("this is a test")
+               arduinoReply = recvLikeArduino()
+               while (arduinoReply == 'XXX'):
+                  arduinoReply = recvLikeArduino()
+               print ("Reply %s" %(arduinoReply))
+               stmok = True
+            except Exception as e:
+               stmok = False
+            return jsonify({'status': "ok","statusSTM":stmok,'stm_value':str(arduinoReply),'confirmed_value':value})
+         return jsonify({'status': "ok","statusSTM":stmok,'confirmed_value':value})
+      except Exception as e:
+         return jsonify({"status": "error","confirmed_value":str(e)})
+
+@app.route('/test/connexion',methods = ['POST', 'GET'])
+def connexiontest():
+   if request.method == 'POST':
+      try:
+         value = request.get_json()
+         print("mode : ", value['mode'])
+         print("information : ",value['information'])
+         stmok = False
+         if stm:
+            try:
+               sendToArduino("this is a test")
+               arduinoReply = recvLikeArduino()
+               while (arduinoReply == 'XXX'):
+                  arduinoReply = recvLikeArduino()
+               print ("Reply %s" %(arduinoReply))
+               stmok = True
+            except Exception as e:
+               stmok = False
+            return jsonify({'status': "ok","statusSTM":stmok,'stm_value':str(arduinoReply),'confirmed_value':value})
+         return jsonify({'status': "ok","statusSTM":stmok,'confirmed_value':value})
+
+      except Exception as e:
+         return jsonify({"status": "error","confirmed_value":str(e)})
+   else:
+       return "GET"
+
+@app.route('/test/joystick',methods = ['POST', 'GET'])
+def joysticktest():
+   debut = time.time()
+   global mode
+   global articulation_old
+   global mode_pince
+   vmax = 20
+   if request.method == 'POST':
+      try:
+         value = request.get_json()
+         print(value)
+         try:
+            articulation_old, mode_pince, pilot = pilotage(articulation_old, mode_pince, mode, value, vmax)
+            print(articulation_old)
+            print(pilot)
+         except:
+            pilot = {'mode':'stop','vitesses':[0,0,0,0,0,0,0]}
+
+         stmok = False
+         if stm:
+            try:
+               sendToArduino(pilot)
+               arduinoReply = recvLikeArduino()
+               while (arduinoReply == 'XXX'):
+                  arduinoReply = recvLikeArduino()
+               print ("Reply %s" %(arduinoReply))
+               stmok = True
+            except Exception as e:
+               stmok = False
+            print(time.time() - debut)
+            return jsonify({'status': "ok","statusSTM":stmok,'stm_value':str(arduinoReply),'confirmed_value':pilot})
+         print(time.time() - debut)
+         return jsonify({'status': "ok","statusSTM":stmok,'confirmed_value':pilot})
+      except Exception as e:
+         return jsonify({"status": "error","confirmed_value":str(e)})
 
 if __name__ == '__main__':
    app.run(host='0.0.0.0', port='8000')
